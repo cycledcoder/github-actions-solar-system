@@ -128,9 +128,11 @@ jobs:
 
         - run: kubectl version --short -o yaml
 
-        - name: Get Ingress IP
-          run: echo "INGRESS_IP=$(kubectl -n ingress-nginx get service ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
-      
+        - name: store ingress ip
+          run: | 
+            echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller \
+            -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+        
         - name: replace manifest tokens
           uses: cschleiden/replace-tokens@v1
           with:
@@ -141,6 +143,7 @@ jobs:
            NAMESPACE: ${{ vars.NAMESPACE }} 
            REPLICAS: ${{vars.REPLICAS }}
            IMAGE: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
+           INGRESS_IP: ${{ env.INGRESS_IP }}
 
         - name: check manifest token replacement
           run: cat kubernetes/development/*.yaml
